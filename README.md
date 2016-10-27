@@ -10,7 +10,7 @@ Please feel free to comment.  I'm happy to convert this into some sort of Fable 
 
 ## To Compile
 
-Run `build` and open `index.html`
+Run `npm run build` and open `index.html`
 
 ## Contact
 
