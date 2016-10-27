@@ -1,0 +1,21 @@
+{
+  "projFile": "Client.fsproj",
+  "babelPlugins": [ "transform-runtime" ],
+  "outDir": "out",
+  "rollup": {
+    "plugins": {
+      "commonjs": {
+        "jsnext": true,
+        "main": true,
+        "browser": true,
+        //"include": "node_modules/**",
+        "namedExports": {
+          "react": [ "Component", "createElement" ],
+          "react-dom": [ "render" ]
+        }
+      },
+      "replace": { "process.env.NODE_ENV": "'production'" }
+      //"uglify": { }
+    }
+  }
+}
