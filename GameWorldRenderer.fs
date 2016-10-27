@@ -25,7 +25,8 @@ let create subscribe dispatch spriteLoadInfos (holder : Browser.Element) =
     canvas.style.height <- height.ToString() + "px"
 
     canvas.onmousemove <- Func<_,_>(fun e ->
-        MouseMove(e.pageX, e.pageY) |> dispatch
+        let rect = canvas.getBoundingClientRect()
+        MouseMove(e.clientX - rect.left, e.clientY - rect.top) |> dispatch
         obj())
 
 //    canvas.onmousedown <- Func<_,_>(fun e ->
