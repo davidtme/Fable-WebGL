@@ -13,7 +13,7 @@ type private Sprite = {
     Layers : (int * RenderMode * Browser.WebGLTexture) list
 }
 
-let create subscribe dispatch spriteLoadInfos (holder : Browser.Element) =
+let create spriteLoadInfos (holder : Browser.Element) =
 
     let canvas = Browser.document.createElement_canvas()
     let width = 640
@@ -24,18 +24,21 @@ let create subscribe dispatch spriteLoadInfos (holder : Browser.Element) =
     canvas.style.width <- width.ToString() + "px"
     canvas.style.height <- height.ToString() + "px"
 
-    canvas.onmousemove <- Func<_,_>(fun e ->
-        let rect = canvas.getBoundingClientRect()
-        MouseMove(e.clientX - rect.left, e.clientY - rect.top) |> dispatch
-        obj())
 
-//    canvas.onmousedown <- Func<_,_>(fun e ->
-//        MouseDown |> dispatch
-//        obj())
 
     holder.appendChild(canvas) |> ignore
 
-    let context : Browser.WebGLRenderingContext = canvas.getContext("webgl", createObj [ "premultipliedAlpha" ==> false ]) |> unbox
+    let context =
+        // TODO: Change to a tryPick and handle if missing.
+        ["webgl"; "experimental-webgl"; "webkit-3d"; "moz-webgl"]
+        |> List.pick(fun n ->
+            try
+                let c : Browser.WebGLRenderingContext = canvas.getContext(n) |> unbox
+                if c <> null then Some c
+                else None
+            with _ ->
+                None
+        )
 
     let positionBuffer = createSpritePositionBuffer context
     let textureBuffer = createSpriteTextureBuffer context
@@ -194,9 +197,19 @@ let create subscribe dispatch spriteLoadInfos (holder : Browser.Element) =
 
     let created = DateTime.Now;
     let mutable last = DateTime.Now
+    let mutable lastDispatch = fun _ -> ignore()
 
-    subscribe <|
-    function
+    fun model dispatch ->
+
+    if Object.ReferenceEquals(lastDispatch, dispatch) then
+        lastDispatch <- dispatch
+        canvas.onmousemove <- Func<_,_>(fun e ->
+            let rect = canvas.getBoundingClientRect()
+            MouseMove(e.clientX - rect.left, e.clientY - rect.top) |> dispatch
+            obj())
+
+
+    match model with
     | model when model.Now <> last ->
         last <- model.Now
 

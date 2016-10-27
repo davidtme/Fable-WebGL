@@ -5,6 +5,7 @@ open ModelsClient
 open System
 open Fable.Helpers.React.Props
 open Fable.Core.JsInterop
+open Elmish
 
 module R = Fable.Helpers.React
 
@@ -53,26 +54,15 @@ let view (model:Model) (dispatch : Message -> unit) =
 // Main React App
 // ====================================================================================================
 
-type App(initialProps) as this =
-    //inherit React.Component<((Model -> unit)->unit)*Dispatch<Message>,Model option>(initialProps)
-    inherit React.Component<obj,Model option>(obj(), None)
-    let subscribe, dispatch = initialProps
-
-    do
-        subscribe <|
-        let mutable last = unbox null
-        fun model ->
-        // Only update the hud when we are something we render changes
-        if Object.ReferenceEquals(last, null) ||
-            Object.ReferenceEquals(model.Items, last.Items) |> not ||
-            model.Fps <> last.Fps then
-            last <- model
-            this.setState (Some(model))
+type App() =
+    inherit React.Component<obj,(Model * (Message -> unit)) option>(obj(), None)
 
     member this.render() =
         match this.state with
-        | Some (model) -> view model dispatch
+        | Some (model, dispatch) -> view model dispatch
         | _ -> R.div [][]
 
+let create holder =
+    let c = ReactDom.render(Fable.Helpers.React.com<App,_,_> None [], holder)
+    fun (model :Model) (dispatch:Dispatch<Message>) -> c.setState((model,dispatch)); ignore()
 
-let create subscribe dispatch holder = ReactDom.render( Fable.Helpers.React.com<App,_,_> (subscribe,dispatch) [], holder) |> ignore

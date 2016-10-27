@@ -23,40 +23,37 @@ let spriteLoadInfos =
     |> Map.ofList
 
 
-
 let start() =
-    let subscribe, dispatch =
-        let update = Event<_>()
 
-        // Connect to the server and wait for messages.
-        //let webSocket = Browser.WebSocket.Create("")
+    // Connect to the server and wait for messages.
+//    let webSocket = Browser.WebSocket.Create("")
+    let serverRequest = fun _ -> ignore() // fun (m : ServerRequest) -> m |> Serialize.toJson |> webSocket.send
 
-        // Outgoing messages.
-        let serverRequest = fun _ -> ignore() // fun (m : ServerRequest) -> m |> Serialize.toJson |> webSocket.send
+    let gameWorldView = GameWorldRenderer.create spriteLoadInfos (Browser.document.getElementById("GameWorld"))
+    let hudView = HudRenderer.create (Browser.document.getElementById("Hud"))
 
-        // Create the program.
-        let program =
-            Program.mkProgram State.init (State.update serverRequest) (fun _ _ -> ignore())
-            //|> Program.withConsoleTrace
+    let view model dispatch =
+        gameWorldView model dispatch
+        hudView model dispatch
 
-        let dispatch = Program.run update.Trigger program
+    let subscription model =
+        Cmd.ofSub (view model)
 
-        // Incoming messages.
-//        webSocket.onmessage <- fun message ->
-//            unbox message.data
-//            |> Serialize.ofJson
-//            |> FromServer
-//            |> dispatch
-//            obj()
+    let dispatch =
+        Program.mkProgram State.init (State.update serverRequest) (fun _ _ -> ignore())
+        |> Program.withSubscription subscription
+        |> Program.run (fun _ -> ignore())
 
-        update.Publish.Add, dispatch
-
-    GameWorldRenderer.create subscribe dispatch spriteLoadInfos (Browser.document.getElementById("GameWorld"))
-    HudRenderer.create subscribe dispatch (Browser.document.getElementById("Hud"))
+//    // Incoming messages.
+//    webSocket.onmessage <- fun message ->
+//        unbox message.data
+//        |> Serialize.ofJson
+//        |> FromServer
+//        |> dispatch
+//        obj()
 
     AddItem "Penguin" |> dispatch
     AddItem "Fable" |> dispatch
-
     Advance |> dispatch
 
 
