@@ -35,7 +35,19 @@ let create subscribe dispatch spriteLoadInfos (holder : Browser.Element) =
 
     holder.appendChild(canvas) |> ignore
 
-    let context : Browser.WebGLRenderingContext = canvas.getContext("webgl", createObj [ "premultipliedAlpha" ==> false ]) |> unbox
+    let context : Browser.WebGLRenderingContext = 
+      // Helper to get the webgl context
+      let getContext ctxString =
+        canvas.getContext(ctxString, createObj [ "premultipliedAlpha" ==> false ]) |> unbox<Browser.WebGLRenderingContext>
+
+      let webgl = getContext "webgl"
+  
+      // If we have wegl = null in JS then try to get experimental-wegl
+      // Edge and webkit use experimental-webgl
+      if not (unbox webgl) then
+        getContext "experimental-webgl"
+      else // Else give back the context
+        webgl
 
     let positionBuffer = createSpritePositionBuffer context
     let textureBuffer = createSpriteTextureBuffer context
